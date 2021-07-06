@@ -4,9 +4,10 @@ passport = require('passport'),
   localStrategy = require('passport-local').Strategy,
   flash = require('connect-flash')
   var crypto = require("crypto");
-var algorithm = "aes-192-cbc"; //алгоритм шифрования
+//var algorithm = "aes-192-cbc"; //алгоритм шифрования
 var text = "Hello darkness";
-const key = crypto.scryptSync(text, 'salt', 24); //создание ключа
+var crypto = require("crypto");
+//const key = crypto.scryptSync(text, 'salt', 24); //создание ключа
 
 var app = express();
   
@@ -46,8 +47,8 @@ app.post("/register", urlencodedParser, function (request, response) {
    });
   
   
-  
-   const sqlCreate = `create table if not exists usersnp4(
+  //создание запроса базе данных
+   const sqlCreate = `create table if not exists usersnp3(
     id int primary key auto_increment,
     userLogin varchar(300),
     userSurname varchar(300),
@@ -55,13 +56,8 @@ app.post("/register", urlencodedParser, function (request, response) {
     userPatron varchar(300) ,
     userPassSer int,
     userPassNum int,
-    password varchar(300) unique,
-    iv text
+    password varchar(300) unique
   )`;
-
-
-   
-
 
 
 
@@ -70,37 +66,29 @@ app.post("/register", urlencodedParser, function (request, response) {
   if(err) console.log(err);
   else console.log("Таблица создана");
 });
-//создание и шифрование пароля
+
 const subpassword = RandomPassword();
-const iv = crypto.randomBytes(16); // генератор рандомных чипертекстов
-const cipher = crypto.createCipheriv(algorithm, key, iv);
-var encrypted = cipher.update(subpassword, 'utf8', 'hex') + cipher.final('hex'); // зашифрованный пароль
-const password = encrypted;
-console.log(subpassword);
-console.log(password);
-//расшифровка
-// const decipher = crypto.createDecipheriv(algorithm, key, iv);
-// var decrypted = decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8'); //расшифрованный пароль
-// console.log(decrypted);
-
-const user = [arr.userLogin, arr.userSurname, arr.userName, arr.userPatron, arr.userPassSer, arr.userPassNum, password, iv];
+var hash = crypto.createHash("sha512");
+//console.log(subpassword);
+data = hash.update(subpassword, "utf-8");
+genHash = data.digest("hex");
+//console.log("hash: " + genHash);
+const password = genHash;
 
 
 
- const sql1 = "INSERT INTO usersnp4(userLogin, userSurname, userName, UserPatron, userPassSer, userPassNum, password, iv) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+const user = [arr.userLogin, arr.userSurname, arr.userName, arr.userPatron, arr.userPassSer, arr.userPassNum, password];
+
+
+
+ const sql1 = "INSERT INTO usersnp3(userLogin, userSurname, userName, UserPatron, userPassSer, userPassNum, password) VALUES(?, ?, ?, ?, ?, ?, ?)";
  connection.query(sql1, user, function(err, result) {
     if(err) console.log(err);
     else console.log("Данные добавлены");
 });
 
 
-// const sql2 = "select * from mydbnp";
-// connection.query(sql2, function (err, responce){
-//   console.log(userLogin);
-//   if(response){
-//     console.log(response[1].userLogin);
-//   }
-// })
+
 
  // закрытие подключения
  connection.end(function(err) {
